@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import ( # type: ignore
 )
 
 from desktop.ui.theme import (
-    ACCENT, ACCENT_LIGHT, WHITE, SNOW, SILVER, CHARCOAL, SMOKE, BLACK,
+    PRIMARY, PRIMARY_LIGHT, WHITE, OFFWHITE, SURFACE, DIVIDER, TEXT, MUTED, HEADING,
     heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
 )
 from desktop.api_client import api
@@ -35,16 +35,16 @@ class SidebarButton(QPushButton):
         if checked:
             self.setStyleSheet(
                 f"QPushButton {{ text-align: left; padding-left: 20px; "
-                f"background-color: {ACCENT_LIGHT}; color: {ACCENT}; "
-                f"border: none; border-left: 3px solid {ACCENT}; "
+                f"background-color: {PRIMARY_LIGHT}; color: {PRIMARY}; "
+                f"border: none; border-left: 4px solid {PRIMARY}; "
                 f"font-weight: 600; border-radius: 0; }}"
             )
         else:
             self.setStyleSheet(
                 f"QPushButton {{ text-align: left; padding-left: 20px; "
-                f"background-color: transparent; color: {CHARCOAL}; "
+                f"background-color: transparent; color: {TEXT}; "
                 f"border: none; font-weight: 500; border-radius: 0; }}"
-                f"QPushButton:hover {{ background-color: {SNOW}; }}"
+                f"QPushButton:hover {{ background-color: {SURFACE}; }}"
             )
 
     def setChecked(self, checked: bool):
@@ -67,9 +67,9 @@ class MainWindow(QWidget):
 
         # Sidebar
         sidebar = QFrame()
-        sidebar.setFixedWidth(240)
+        sidebar.setFixedWidth(260)
         sidebar.setStyleSheet(
-            f"QFrame {{ background-color: {WHITE}; border-right: 1px solid {SILVER}; }}"
+            f"QFrame {{ background-color: {WHITE}; border-right: 1px solid {DIVIDER}; }}"
         )
         sb_layout = QVBoxLayout(sidebar)
         sb_layout.setContentsMargins(0, 0, 0, 0)
@@ -77,17 +77,17 @@ class MainWindow(QWidget):
 
         # Brand header
         brand_frame = QFrame()
-        brand_frame.setFixedHeight(72)
-        brand_frame.setStyleSheet(f"border-bottom: 1px solid {SILVER}; background: {WHITE};")
+        brand_frame.setFixedHeight(80)
+        brand_frame.setStyleSheet(f"border-bottom: 2px solid {DIVIDER}; background: {WHITE};")
         bl = QVBoxLayout(brand_frame)
-        bl.setContentsMargins(20, 12, 20, 12)
-        brand = QLabel("Horizon Cinemas")
-        brand.setFont(heading_font(14))
-        brand.setStyleSheet(f"color: {CHARCOAL}; border: none;")
+        bl.setContentsMargins(20, 16, 20, 16)
+        brand = QLabel("🎬 Horizon")
+        brand.setFont(heading_font(16, bold=True))
+        brand.setStyleSheet(f"color: {PRIMARY}; border: none; letter-spacing: -1px;")
         bl.addWidget(brand)
         cinema_lbl = QLabel(api.cinema_name)
         cinema_lbl.setFont(body_font(9))
-        cinema_lbl.setStyleSheet(f"color: {SMOKE}; border: none;")
+        cinema_lbl.setStyleSheet(f"color: {MUTED}; border: none; font-weight: 500;")
         bl.addWidget(cinema_lbl)
         sb_layout.addWidget(brand_frame)
 
@@ -95,11 +95,11 @@ class MainWindow(QWidget):
 
         # Section label
         def section_label(text):
-            lbl = QLabel(f"  {text}")
-            lbl.setFont(body_font(9))
+            lbl = QLabel(f"  {text.upper()}")
+            lbl.setFont(body_font(8))
             lbl.setStyleSheet(
-                f"color: {SMOKE}; font-weight: 600; letter-spacing: 1px; "
-                f"padding: 12px 20px 4px 20px; border: none;"
+                f"color: {MUTED}; font-weight: 700; letter-spacing: 1.5px; "
+                f"padding: 14px 20px 6px 20px; border: none;"
             )
             return lbl
 
@@ -125,28 +125,28 @@ class MainWindow(QWidget):
 
         # User info + logout
         user_frame = QFrame()
-        user_frame.setStyleSheet(f"border-top: 1px solid {SILVER}; background: {SNOW};")
+        user_frame.setStyleSheet(f"border-top: 2px solid {DIVIDER}; background: {SURFACE};")
         uf_layout = QVBoxLayout(user_frame)
-        uf_layout.setContentsMargins(16, 12, 16, 12)
+        uf_layout.setContentsMargins(16, 16, 16, 16)
 
         name_lbl = QLabel(api.display_name)
         name_lbl.setFont(body_font(10))
-        name_lbl.setStyleSheet(f"color: {CHARCOAL}; font-weight: 600; border: none;")
+        name_lbl.setStyleSheet(f"color: {TEXT}; font-weight: 600; border: none;")
         uf_layout.addWidget(name_lbl)
 
         role_lbl = QLabel(api.role.replace("_", " ").title())
         role_lbl.setFont(body_font(9))
-        role_lbl.setStyleSheet(f"color: {SMOKE}; border: none;")
+        role_lbl.setStyleSheet(f"color: {MUTED}; border: none; font-weight: 500;")
         uf_layout.addWidget(role_lbl)
 
         logout_btn = QPushButton("Sign Out")
         logout_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         logout_btn.setFont(body_font(10))
         logout_btn.setStyleSheet(
-            f"QPushButton {{ color: {SMOKE}; background: transparent; "
-            f"border: 1px solid {SILVER}; border-radius: 4px; padding: 6px; "
-            f"margin-top: 8px; font-weight: 500; }}"
-            f"QPushButton:hover {{ background: {WHITE}; color: {CHARCOAL}; }}"
+            f"QPushButton {{ color: {MUTED}; background: transparent; "
+            f"border: 1px solid {DIVIDER}; border-radius: {5}px; padding: 8px; "
+            f"margin-top: 12px; font-weight: 500; }}"
+            f"QPushButton:hover {{ background: {WHITE}; color: {TEXT}; }}"
         )
         logout_btn.clicked.connect(self._do_logout)
         uf_layout.addWidget(logout_btn)
@@ -156,7 +156,7 @@ class MainWindow(QWidget):
 
         # Content area
         self.stack = QStackedWidget()
-        self.stack.setStyleSheet(f"background-color: {SNOW};")
+        self.stack.setStyleSheet(f"background-color: {OFFWHITE};")
         root.addWidget(self.stack, 1)
 
         # Lazy-load pages on first nav click
