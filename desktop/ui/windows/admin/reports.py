@@ -7,14 +7,16 @@ from datetime import date
 from PyQt6.QtCore import Qt # type: ignore
 from PyQt6.QtWidgets import ( # type: ignore
     QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QTableWidget,
-    QTableWidgetItem, QHeaderView, QComboBox, QSpinBox, QLabel,
+    QTableWidgetItem, QHeaderView, QComboBox, QSpinBox, QLabel, QFrame, QScrollArea,
 )
 
-from desktop.ui.theme import SPACING_MD, SPACING_LG, ACCENT
-from desktop.ui.widgets import (
-    heading_label, primary_button, separator, error_dialog, body_font,
+from desktop.ui.theme import (
+    SPACING_MD, SPACING_LG, SPACING_XL, PRIMARY, SUCCESS, TEXT, MUTED, HEADING, OFFWHITE, WHITE, SURFACE, DIVIDER,
+    heading_font, body_font,
 )
-from desktop.ui.theme import body_font
+from desktop.ui.widgets import (
+    heading_label, primary_button, separator, error_dialog, Card,
+)
 from desktop.api_client import api
 
 
@@ -26,12 +28,43 @@ class ReportsView(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
-        layout.setSpacing(SPACING_MD)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        layout.addWidget(heading_label("Reports"))
+        # Hero section
+        hero = QFrame()
+        hero.setStyleSheet(
+            f"background: linear-gradient(135deg, {PRIMARY}, #EE2A7B); padding: 40px;"
+        )
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(SPACING_LG, SPACING_XL, SPACING_LG, SPACING_XL)
+        hero_layout.setSpacing(SPACING_MD)
+
+        hero_title = QLabel("Business Reports")
+        hero_title.setFont(heading_font(28, bold=True))
+        hero_title.setStyleSheet("color: white; border: none; letter-spacing: -1px;")
+        hero_layout.addWidget(hero_title)
+
+        hero_subtitle = QLabel("Analyze revenue, bookings, and performance metrics")
+        hero_subtitle.setFont(body_font(12))
+        hero_subtitle.setStyleSheet("color: rgba(255,255,255,0.9); border: none; font-weight: 500;")
+        hero_layout.addWidget(hero_subtitle)
+
+        layout.addWidget(hero)
+
+        # Main content
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {OFFWHITE}; }}")
+
+        content = QWidget()
+        content.setStyleSheet(f"background-color: {OFFWHITE};")
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
+        content_layout.setSpacing(SPACING_MD)
 
         # Filters
+        filters_card = Card()
         filters = QHBoxLayout()
         self.year_spin = QSpinBox()
         self.year_spin.setRange(2020, 2030)
@@ -45,13 +78,13 @@ class ReportsView(QWidget):
         filters.addWidget(QLabel("Month:"))
         filters.addWidget(self.month_spin)
 
-        gen_btn = primary_button("Generate")
+        gen_btn = primary_button("Generate Reports")
+        gen_btn.setMinimumWidth(140)
         gen_btn.clicked.connect(self._generate_all)
         filters.addWidget(gen_btn)
         filters.addStretch()
-        layout.addLayout(filters)
-
-        layout.addWidget(separator())
+        filters_card.add_layout(filters)
+        content_layout.addWidget(filters_card)
 
         # Tabs
         self.tabs = QTabWidget()
@@ -67,7 +100,10 @@ class ReportsView(QWidget):
         self.staff_table = self._make_table(["Staff", "Username", "Cinema", "Bookings", "Revenue"])
         self.tabs.addTab(self.staff_table, "Staff Bookings")
 
-        layout.addWidget(self.tabs, 1)
+        content_layout.addWidget(self.tabs, 1)
+
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
 
     def _make_table(self, headers: list) -> QTableWidget:
         t = QTableWidget()

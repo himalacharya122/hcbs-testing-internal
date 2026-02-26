@@ -14,8 +14,8 @@ from PyQt6.QtWidgets import ( # type: ignore
 )
 
 from desktop.ui.theme import (
-    ACCENT, WHITE, SNOW, SILVER, CHARCOAL, SMOKE, SUCCESS,
-    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
+    PRIMARY, PRIMARY_DARK, PRIMARY_LIGHT, WHITE, OFFWHITE, SURFACE, DIVIDER, TEXT, MUTED, HEADING, SUCCESS, DANGER,
+    heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG, SPACING_XL, SPACING_2XL,
 )
 from desktop.ui.widgets import (
     heading_label, subheading_label, muted_label, primary_button,
@@ -35,28 +35,54 @@ class NewBookingView(QWidget):
         self._load_cinemas()
 
     def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Hero section
+        hero = QFrame()
+        hero.setStyleSheet(
+            f"background: linear-gradient(135deg, {PRIMARY}, #EE2A7B); padding: 40px;"
+        )
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(SPACING_LG, SPACING_XL, SPACING_LG, SPACING_XL)
+        hero_layout.setSpacing(SPACING_SM)
+
+        hero_title = QLabel("New Booking")
+        hero_title.setFont(heading_font(28, bold=True))
+        hero_title.setStyleSheet("color: white; border: none; letter-spacing: -1px;")
+        hero_layout.addWidget(hero_title)
+
+        hero_subtitle = QLabel("Step 1: Select Film  •  Step 2: Choose Seats  •  Step 3: Confirm")
+        hero_subtitle.setFont(body_font(11))
+        hero_subtitle.setStyleSheet("color: rgba(255,255,255,0.85); border: none; font-weight: 500;")
+        hero_layout.addWidget(hero_subtitle)
+
+        layout.addWidget(hero)
+
+        # Main content
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {OFFWHITE}; }}")
 
         content = QWidget()
+        content.setStyleSheet(f"background-color: {OFFWHITE};")
         self.main_layout = QVBoxLayout(content)
         self.main_layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         self.main_layout.setSpacing(SPACING_MD)
-
-        self.main_layout.addWidget(heading_label("New Booking"))
-        self.main_layout.addWidget(separator())
 
         # Two-column layout: form | receipt
         columns = QHBoxLayout()
         columns.setSpacing(SPACING_LG)
 
+        # Step 1: Cinema & Film selection
+        select_card = Card()
+        step1_title = subheading_label("Step 1: Select Film", 13)
+        select_card.add(step1_title)
+
         # Left column — booking form
         left = QVBoxLayout()
         left.setSpacing(SPACING_MD)
-
-        # Cinema & Film selection
-        select_card = Card()
 
         self.cinema_combo = QComboBox()
         self.cinema_combo.currentIndexChanged.connect(self._on_cinema_changed)
@@ -118,10 +144,11 @@ class NewBookingView(QWidget):
 
         left.addWidget(ticket_card)
 
-        # Customer info
+        # Step 3: Customer info
         customer_card = Card()
-        cust_title = subheading_label("Customer Details", 12)
+        cust_title = subheading_label("Step 3: Customer Details", 13)
         customer_card.add(cust_title)
+        customer_card.add(separator())
 
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Full name")
@@ -178,11 +205,10 @@ class NewBookingView(QWidget):
         columns.addLayout(right, 2)
 
         self.main_layout.addLayout(columns)
+        self.main_layout.addStretch()
 
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
         scroll.setWidget(content)
-        outer.addWidget(scroll)
+        layout.addWidget(scroll, 1)
 
     # Data loading
     def _load_cinemas(self):
@@ -388,8 +414,8 @@ class NewBookingView(QWidget):
         self.receipt_card.add(separator())
 
         total_lbl = QLabel(f"Total: £{booking['total_cost']:.2f}")
-        total_lbl.setFont(heading_font(16))
-        total_lbl.setStyleSheet(f"color: {ACCENT};")
+        total_lbl.setFont(heading_font(16, bold=True))
+        total_lbl.setStyleSheet(f"color: {PRIMARY}; border: none;")
         self.receipt_card.add(total_lbl)
 
         booking_date = booking.get("booking_date", "")

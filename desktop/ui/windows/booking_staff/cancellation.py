@@ -5,12 +5,12 @@ Cancel a booking by reference. Shows booking details before confirming.
 
 from PyQt6.QtCore import Qt # type: ignore
 from PyQt6.QtWidgets import ( # type: ignore
-    QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel,
+    QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QFrame, QScrollArea,
 )
 
 from desktop.ui.theme import (
-    ACCENT, DANGER, SUCCESS, CHARCOAL, SMOKE, WHITE,
-    heading_font, body_font, SPACING_MD, SPACING_LG,
+    PRIMARY, DANGER, SUCCESS, TEXT, MUTED, WHITE, OFFWHITE, SURFACE, DIVIDER, HEADING,
+    heading_font, body_font, SPACING_MD, SPACING_LG, SPACING_XL, SPACING_2XL,
 )
 from desktop.ui.widgets import (
     heading_label, subheading_label, muted_label, primary_button,
@@ -30,11 +30,40 @@ class CancellationView(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
-        layout.setSpacing(SPACING_MD)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        layout.addWidget(heading_label("Booking Cancellation"))
-        layout.addWidget(separator())
+        # Hero section
+        hero = QFrame()
+        hero.setStyleSheet(
+            f"background: linear-gradient(135deg, {DANGER}, #DC2626); padding: 40px;"
+        )
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(SPACING_LG, SPACING_XL, SPACING_LG, SPACING_XL)
+        hero_layout.setSpacing(SPACING_SM)
+
+        hero_title = QLabel("Cancel Booking")
+        hero_title.setFont(heading_font(28, bold=True))
+        hero_title.setStyleSheet("color: white; border: none; letter-spacing: -1px;")
+        hero_layout.addWidget(hero_title)
+
+        hero_subtitle = QLabel("Enter booking reference to look up and cancel a booking")
+        hero_subtitle.setFont(body_font(12))
+        hero_subtitle.setStyleSheet("color: rgba(255,255,255,0.9); border: none; font-weight: 500;")
+        hero_layout.addWidget(hero_subtitle)
+
+        layout.addWidget(hero)
+
+        # Main content
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {OFFWHITE}; }}")
+
+        content = QWidget()
+        content.setStyleSheet(f"background-color: {OFFWHITE};")
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
+        content_layout.setSpacing(SPACING_MD)
 
         # Search bar
         search_card = Card()
@@ -42,29 +71,34 @@ class CancellationView(QWidget):
 
         self.ref_input = QLineEdit()
         self.ref_input.setPlaceholderText("Enter booking reference (e.g. HC-2025-00001)")
-        self.ref_input.setFixedWidth(360)
-        search_row.addWidget(QLabel("Reference:"))
+        self.ref_input.setMinimumWidth(300)
+        self.ref_input.setMaximumWidth(400)
+        search_row.addWidget(QLabel("Booking Reference:"))
         search_row.addWidget(self.ref_input)
 
-        self.search_btn = primary_button("Look Up")
+        self.search_btn = primary_button("Look Up Booking")
+        self.search_btn.setMinimumWidth(140)
         self.search_btn.clicked.connect(self._lookup_booking)
         search_row.addWidget(self.search_btn)
         search_row.addStretch()
 
         search_card.add_layout(search_row)
-        layout.addWidget(search_card)
+        content_layout.addWidget(search_card)
 
         # Booking details
         self.details_card = Card()
         self.details_card.hide()
-        layout.addWidget(self.details_card)
+        content_layout.addWidget(self.details_card)
 
         # Cancel result
         self.result_card = Card()
         self.result_card.hide()
-        layout.addWidget(self.result_card)
+        content_layout.addWidget(self.result_card)
 
-        layout.addStretch()
+        content_layout.addStretch()
+
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
 
         self.ref_input.returnPressed.connect(self._lookup_booking)
 
@@ -146,7 +180,7 @@ class CancellationView(QWidget):
                 f"Cancellation fee: £{fee:.2f} (50%)   |   Refund: £{refund:.2f}"
             )
             warn.setFont(body_font(10))
-            warn.setStyleSheet(f"color: {DANGER}; font-weight: 500; padding: 4px;")
+            warn.setStyleSheet(f"color: {DANGER}; font-weight: 600; padding: 8px; border: none;")
             self.details_card.add(warn)
 
             cancel_btn = danger_button("Cancel This Booking")

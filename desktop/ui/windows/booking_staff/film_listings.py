@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import ( # type: ignore
 )
 
 from desktop.ui.theme import (
-    ACCENT, ACCENT_LIGHT, WHITE, SNOW, SILVER, CHARCOAL, SMOKE, BLACK, SUCCESS,
+    PRIMARY, PRIMARY_LIGHT, WHITE, OFFWHITE, SURFACE, DIVIDER, TEXT, MUTED, HEADING, SUCCESS, WARNING,
     heading_font, body_font, SPACING_SM, SPACING_MD, SPACING_LG,
 )
 from desktop.ui.widgets import (
@@ -31,20 +31,50 @@ class FilmListingsView(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
-        layout.setSpacing(SPACING_MD)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        # Header
-        header = QHBoxLayout()
-        header.addWidget(heading_label("Film Listings"))
-        header.addStretch()
+        # Hero section
+        hero = QFrame()
+        hero.setStyleSheet(
+            f"background: linear-gradient(135deg, {PRIMARY}, #EE2A7B); padding: 40px;"
+        )
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(SPACING_LG, SPACING_2XL, SPACING_LG, SPACING_2XL)
+        hero_layout.setSpacing(SPACING_MD)
+
+        hero_title = QLabel("Browse Films")
+        hero_title.setFont(heading_font(28, bold=True))
+        hero_title.setStyleSheet("color: white; border: none; letter-spacing: -1px;")
+        hero_layout.addWidget(hero_title)
+
+        hero_subtitle = QLabel("Select a cinema and date to see available showtimes")
+        hero_subtitle.setFont(body_font(12))
+        hero_subtitle.setStyleSheet("color: rgba(255,255,255,0.9); border: none; font-weight: 500;")
+        hero_layout.addWidget(hero_subtitle)
+
+        layout.addWidget(hero)
+
+        # Main content
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
+        content_layout.setSpacing(SPACING_MD)
+
+        # Filters bar
+        filters_frame = QFrame()
+        filters_frame.setStyleSheet(f"background: {WHITE}; border-bottom: 1px solid {DIVIDER};")
+        filters_layout = QHBoxLayout(filters_frame)
+        filters_layout.setContentsMargins(SPACING_LG, SPACING_MD, SPACING_LG, SPACING_MD)
+        filters_layout.setSpacing(SPACING_MD)
 
         # Cinema selector
         self.cinema_combo = QComboBox()
-        self.cinema_combo.setFixedWidth(260)
+        self.cinema_combo.setMinimumWidth(200)
+        self.cinema_combo.setMaximumWidth(300)
         self.cinema_combo.currentIndexChanged.connect(self._on_filters_changed)
-        header.addWidget(QLabel("Cinema:"))
-        header.addWidget(self.cinema_combo)
+        filters_layout.addWidget(QLabel("Cinema:"))
+        filters_layout.addWidget(self.cinema_combo)
 
         # Date selector
         self.date_edit = QDateEdit()
@@ -52,28 +82,28 @@ class FilmListingsView(QWidget):
         self.date_edit.setDate(QDate.currentDate())
         self.date_edit.setMinimumDate(QDate.currentDate())
         self.date_edit.setMaximumDate(QDate.currentDate().addDays(7))
-        self.date_edit.setFixedWidth(140)
+        self.date_edit.setMinimumWidth(140)
         self.date_edit.dateChanged.connect(self._on_filters_changed)
-        header.addWidget(QLabel("Date:"))
-        header.addWidget(self.date_edit)
+        filters_layout.addWidget(QLabel("Date:"))
+        filters_layout.addWidget(self.date_edit)
 
         # Nav buttons
-        prev_btn = secondary_button("◀  Previous Day")
-        prev_btn.setFixedWidth(130)
+        prev_btn = secondary_button("← Previous")
+        prev_btn.setMinimumWidth(100)
         prev_btn.clicked.connect(self._prev_day)
-        next_btn = secondary_button("Next Day  ▶")
-        next_btn.setFixedWidth(130)
+        next_btn = secondary_button("Next →")
+        next_btn.setMinimumWidth(100)
         next_btn.clicked.connect(self._next_day)
-        header.addWidget(prev_btn)
-        header.addWidget(next_btn)
+        filters_layout.addWidget(prev_btn)
+        filters_layout.addWidget(next_btn)
 
-        layout.addLayout(header)
-        layout.addWidget(separator())
+        filters_layout.addStretch()
+        content_layout.addWidget(filters_frame)
 
         # Scrollable film cards
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {OFFWHITE}; }}")
 
         self.cards_container = QWidget()
         self.cards_layout = QVBoxLayout(self.cards_container)
@@ -82,7 +112,14 @@ class FilmListingsView(QWidget):
         self.cards_layout.addStretch()
 
         scroll.setWidget(self.cards_container)
-        layout.addWidget(scroll, 1)
+        content_layout.addWidget(scroll, 1)
+
+        # Add content to main layout
+        main_scroll = QScrollArea()
+        main_scroll.setWidgetResizable(True)
+        main_scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {OFFWHITE}; }}")
+        main_scroll.setWidget(content)
+        layout.addWidget(main_scroll, 1)
 
     def _load_cinemas(self):
         try:
@@ -141,7 +178,7 @@ class FilmListingsView(QWidget):
         if not listings:
             empty = QLabel("No films listed for this cinema on the selected date.")
             empty.setFont(body_font(12))
-            empty.setStyleSheet(f"color: {SMOKE}; padding: 40px;")
+            empty.setStyleSheet(f"color: {MUTED}; padding: 40px;")
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.cards_layout.insertWidget(0, empty)
             return
@@ -160,13 +197,13 @@ class FilmListingsView(QWidget):
         title_row.addStretch()
 
         if data.get("imdb_rating"):
-            rating = badge_label(f"★ {data['imdb_rating']}", "#F59E0B")
+            rating = badge_label(f"★ {data['imdb_rating']}", WARNING)
             title_row.addWidget(rating)
 
-        genre_badge = badge_label(data["genre"], ACCENT)
+        genre_badge = badge_label(data["genre"], PRIMARY)
         title_row.addWidget(genre_badge)
 
-        age_badge = badge_label(data["age_rating"], CHARCOAL)
+        age_badge = badge_label(data["age_rating"], TEXT)
         title_row.addWidget(age_badge)
 
         card.add_layout(title_row)
@@ -186,7 +223,7 @@ class FilmListingsView(QWidget):
         if data.get("description"):
             desc = QLabel(data["description"])
             desc.setFont(body_font(10))
-            desc.setStyleSheet(f"color: {CHARCOAL}; margin-top: 4px;")
+            desc.setStyleSheet(f"color: {TEXT}; margin-top: 8px; line-height: 1.5;")
             desc.setWordWrap(True)
             desc.setMaximumHeight(60)
             card.add(desc)
@@ -203,9 +240,9 @@ class FilmListingsView(QWidget):
         showings_row = QHBoxLayout()
         showings_row.setSpacing(SPACING_SM)
 
-        show_label = QLabel("Showings:")
-        show_label.setFont(body_font(10))
-        show_label.setStyleSheet(f"color: {SMOKE}; font-weight: 600;")
+        show_label = QLabel("SHOWTIMES")
+        show_label.setFont(body_font(9))
+        show_label.setStyleSheet(f"color: {MUTED}; font-weight: 700; letter-spacing: 1px;")
         showings_row.addWidget(show_label)
 
         for s in data.get("showings", []):
@@ -215,28 +252,28 @@ class FilmListingsView(QWidget):
 
             show_widget = QFrame()
             show_widget.setStyleSheet(
-                f"background: {SNOW}; border: 1px solid {SILVER}; border-radius: 4px; padding: 4px;"
+                f"background: {SURFACE}; border: 1px solid {DIVIDER}; border-radius: {6}px; padding: 4px;"
             )
             sw_layout = QVBoxLayout(show_widget)
-            sw_layout.setContentsMargins(12, 6, 12, 6)
-            sw_layout.setSpacing(2)
+            sw_layout.setContentsMargins(14, 10, 14, 10)
+            sw_layout.setSpacing(3)
 
             time_lbl = QLabel(str(show_time))
-            time_lbl.setFont(heading_font(12, bold=True))
+            time_lbl.setFont(heading_font(13, bold=True))
             time_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            time_lbl.setStyleSheet(f"color: {CHARCOAL}; border: none;")
+            time_lbl.setStyleSheet(f"color: {HEADING}; border: none;")
             sw_layout.addWidget(time_lbl)
 
             type_lbl = QLabel(s["show_type"].capitalize())
             type_lbl.setFont(body_font(8))
             type_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            type_lbl.setStyleSheet(f"color: {SMOKE}; border: none;")
+            type_lbl.setStyleSheet(f"color: {MUTED}; border: none; font-weight: 500;")
             sw_layout.addWidget(type_lbl)
 
             price_lbl = QLabel(f"from £{s['lower_hall_price']:.2f}")
             price_lbl.setFont(body_font(9))
             price_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            price_lbl.setStyleSheet(f"color: {ACCENT}; font-weight: 600; border: none;")
+            price_lbl.setStyleSheet(f"color: {PRIMARY}; font-weight: 700; border: none;")
             sw_layout.addWidget(price_lbl)
 
             showings_row.addWidget(show_widget)

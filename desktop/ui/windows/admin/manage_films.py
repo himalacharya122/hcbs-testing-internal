@@ -7,11 +7,11 @@ from PyQt6.QtCore import Qt, QDate # type: ignore
 from PyQt6.QtWidgets import ( # type: ignore
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QHeaderView, QDialog, QLineEdit, QComboBox, QSpinBox, QDateEdit,
-    QDoubleSpinBox, QTextEdit, QFormLayout, QDialogButtonBox,
+    QDoubleSpinBox, QTextEdit, QFormLayout, QDialogButtonBox, QFrame, QLabel, QScrollArea,
 )
 
 from desktop.ui.theme import (
-    ACCENT, CHARCOAL, SMOKE, SPACING_MD, SPACING_LG,
+    PRIMARY, TEXT, MUTED, SPACING_MD, SPACING_LG, SPACING_XL, OFFWHITE, SURFACE, WHITE, DIVIDER,
     heading_font, body_font,
 )
 from desktop.ui.widgets import (
@@ -33,23 +33,56 @@ class ManageFilmsView(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
-        layout.setSpacing(SPACING_MD)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Hero section
+        hero = QFrame()
+        hero.setStyleSheet(
+            f"background: linear-gradient(135deg, {PRIMARY}, #EE2A7B); padding: 40px;"
+        )
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(SPACING_LG, SPACING_XL, SPACING_LG, SPACING_XL)
+        hero_layout.setSpacing(8)
+
+        hero_title = QLabel("Manage Films")
+        hero_title.setFont(heading_font(28, bold=True))
+        hero_title.setStyleSheet("color: white; border: none; letter-spacing: -1px;")
+        hero_layout.addWidget(hero_title)
+
+        hero_subtitle = QLabel("Add, edit, or remove films from the catalog")
+        hero_subtitle.setFont(body_font(12))
+        hero_subtitle.setStyleSheet("color: rgba(255,255,255,0.9); border: none; font-weight: 500;")
+        hero_layout.addWidget(hero_subtitle)
+
+        layout.addWidget(hero)
+
+        # Main content
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {OFFWHITE}; }}")
+
+        content = QWidget()
+        content.setStyleSheet(f"background-color: {OFFWHITE};")
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
+        content_layout.setSpacing(SPACING_MD)
 
         header = QHBoxLayout()
-        header.addWidget(heading_label("Manage Films"))
+        header.addWidget(heading_label("Film Catalog"))
         header.addStretch()
 
-        add_btn = primary_button("+ Add Film")
+        add_btn = primary_button("+ Add New Film")
+        add_btn.setMinimumWidth(140)
         add_btn.clicked.connect(self._add_film)
         header.addWidget(add_btn)
 
         refresh_btn = secondary_button("Refresh")
+        refresh_btn.setMinimumWidth(100)
         refresh_btn.clicked.connect(self._load_films)
         header.addWidget(refresh_btn)
 
-        layout.addLayout(header)
-        layout.addWidget(separator())
+        content_layout.addLayout(header)
 
         # Table
         self.table = QTableWidget()
@@ -63,19 +96,24 @@ class ManageFilmsView(QWidget):
             "ID", "Title", "Genre", "Rating", "Duration", "Release", "IMDb", "Status"
         ])
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        layout.addWidget(self.table, 1)
+        content_layout.addWidget(self.table, 1)
 
         # Action buttons
         btn_row = QHBoxLayout()
         edit_btn = secondary_button("Edit Selected")
+        edit_btn.setMinimumWidth(120)
         edit_btn.clicked.connect(self._edit_film)
         btn_row.addWidget(edit_btn)
 
         del_btn = danger_button("Remove Selected")
+        del_btn.setMinimumWidth(140)
         del_btn.clicked.connect(self._delete_film)
         btn_row.addWidget(del_btn)
         btn_row.addStretch()
-        layout.addLayout(btn_row)
+        content_layout.addLayout(btn_row)
+
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
 
     def _load_films(self):
         try:
